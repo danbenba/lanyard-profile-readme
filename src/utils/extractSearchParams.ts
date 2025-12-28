@@ -9,6 +9,11 @@ export const parseAppId = (string: string | undefined): Array<string> => {
   return string.split(",");
 };
 
+export const parseBadges = (string: string | undefined): Array<string> => {
+  if (string === undefined) return [];
+  return string.split(",");
+};
+
 export function extractSearchParams(
   params: SearchParams,
   data: Data,
@@ -34,6 +39,7 @@ export function extractSearchParams(
   if (!data.discord_user.avatar_decoration_data) hideDecoration = true;
 
   const ignoreAppId = parseAppId(params.ignoreAppId);
+  const customBadges = parseBadges(params.customBadges);
 
   let hideDiscrim = parseBool(params.hideDiscrim);
   if (hideDiscrim || data.discord_user.discriminator === "0")
@@ -66,5 +72,6 @@ export function extractSearchParams(
     clanBackgroundColor: params.clanBackgroundColor ?? clanBackgroundColor,
     borderRadius: params.borderRadius,
     idleMessage: params.idleMessage,
+    customBadges: customBadges.length > 0 ? customBadges : undefined,
   };
 }

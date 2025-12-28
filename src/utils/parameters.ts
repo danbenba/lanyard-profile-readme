@@ -18,6 +18,7 @@ export type ProfileSettings = {
   borderRadius?: string;
   idleMessage?: string;
   optimized?: boolean;
+  customBadges?: string[];
 };
 
 export type SearchParams = {
@@ -39,6 +40,7 @@ export type SearchParams = {
   showDisplayName?: string;
   borderRadius?: string;
   idleMessage?: string;
+  customBadges?: string;
 };
 
 export type IParameterInfo = Array<

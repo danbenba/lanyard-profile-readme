@@ -7,6 +7,7 @@ import { IParameterInfo, PARAMETER_INFO } from "@/utils/parameters";
 import * as Icon from "lucide-react";
 import { InfoTooltip } from "@/components/Popover";
 import { cn, filterLetters } from "@/utils/helpers";
+import { BadgeSelector } from "@/components/BadgeSelector";
 
 export default function Home() {
   const ORIGIN_URL =
@@ -19,6 +20,8 @@ export default function Home() {
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [options, setOptions] = useState<Record<string, string | boolean>>({});
+  const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
+  const [showBadgeSelector, setShowBadgeSelector] = useState(false);
 
   async function onLoadDiscordId(userId: string) {
     setUserId(userId);
@@ -31,10 +34,15 @@ export default function Home() {
   }
 
   const url = `${ORIGIN_URL}/api/${userId}${
-    Object.keys(options).length > 0
-      ? `?${Object.keys(options)
-          .map((option) => `${option}=${options[option]}`)
-          .join("&")}`
+    Object.keys(options).length > 0 || selectedBadges.length > 0
+      ? `?${[
+          ...Object.keys(options).map(
+            (option) => `${option}=${options[option]}`
+          ),
+          ...(selectedBadges.length > 0
+            ? [`customBadges=${selectedBadges.join(",")}`]
+            : []),
+        ].join("&")}`
       : ""
   }`;
 
@@ -252,6 +260,32 @@ export default function Home() {
                   );
                 })}
               </div>
+
+              <button
+                onClick={() => setShowBadgeSelector(!showBadgeSelector)}
+                className="flex flex-row items-center justify-center gap-2 mt-4 text-sm text-white/75 hover:text-white w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-full py-1.5 transition-colors duration-150 ease-out"
+              >
+                {showBadgeSelector ? (
+                  <>
+                    <Icon.ChevronUp size={14} />
+                    Masquer les badges
+                  </>
+                ) : (
+                  <>
+                    <Icon.Award size={14} />
+                    Personnaliser les badges
+                  </>
+                )}
+              </button>
+
+              {showBadgeSelector && (
+                <div className="mt-4 p-4 border border-white/10 bg-zinc-900/50 rounded-lg">
+                  <BadgeSelector
+                    selectedBadges={selectedBadges}
+                    onBadgesChange={setSelectedBadges}
+                  />
+                </div>
+              )}
 
               <a
                 href="https://github.com/cnrad/lanyard-profile-readme?tab=readme-ov-file#options"

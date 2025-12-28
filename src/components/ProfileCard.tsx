@@ -71,9 +71,17 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       break;
   }
 
-  const flags: string[] = getFlags(data.discord_user.public_flags);
-  if (data.discord_user.avatar && data.discord_user.avatar.includes("a_"))
-    flags.push("Nitro");
+  let flags: string[] = [];
+  
+  // Si des badges personnalisés sont définis, les utiliser
+  if (settings.customBadges && settings.customBadges.length > 0) {
+    flags = settings.customBadges;
+  } else {
+    // Sinon, utiliser les badges réels de l'utilisateur
+    flags = getFlags(data.discord_user.public_flags);
+    if (data.discord_user.avatar && data.discord_user.avatar.includes("a_"))
+      flags.push("Nitro");
+  }
 
   let userStatus: Activity | null = null;
   if (data.activities[0] && data.activities[0].type === 4)
@@ -304,21 +312,23 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
                   {!!hideBadges
                     ? null
-                    : flags.map((v) => (
-                        <img
-                          key={v}
-                          alt={v}
-                          src={`data:image/png;base64,${Badges[v]}`}
-                          style={{
-                            width: "auto",
-                            height: "20px",
-                            position: "relative",
-                            top: "50%",
-                            transform: "translate(0%, -50%)",
-                            marginRight: "7px",
-                          }}
-                        />
-                      ))}
+                    : flags
+                        .filter((v) => Badges[v as keyof typeof Badges])
+                        .map((v) => (
+                          <img
+                            key={v}
+                            alt={v}
+                            src={`data:image/png;base64,${Badges[v as keyof typeof Badges]}`}
+                            style={{
+                              width: "auto",
+                              height: "20px",
+                              position: "relative",
+                              top: "50%",
+                              transform: "translate(0%, -50%)",
+                              marginRight: "7px",
+                            }}
+                          />
+                        ))}
                 </div>
 
                 {showDisplayName ? (
