@@ -3,6 +3,7 @@ import { Badges, UnknownIconDark, UnknownIconLight } from "@/utils/badges";
 import { elapsedTime, getFlags } from "@/utils/helpers";
 import { ProfileSettings } from "@/utils/parameters";
 import React, { DetailedHTMLProps, HTMLAttributes } from "react";
+import { getBadgeImage } from "@/utils/badgeImages";
 
 interface ProfileCardProps {
   settings: ProfileSettings;
@@ -313,22 +314,25 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   {!!hideBadges
                     ? null
                     : flags
-                        .filter((v) => Badges[v as keyof typeof Badges])
-                        .map((v) => (
-                          <img
-                            key={v}
-                            alt={v}
-                            src={`data:image/png;base64,${Badges[v as keyof typeof Badges]}`}
-                            style={{
-                              width: "auto",
-                              height: "20px",
-                              position: "relative",
-                              top: "50%",
-                              transform: "translate(0%, -50%)",
-                              marginRight: "7px",
-                            }}
-                          />
-                        ))}
+                        .map((v) => {
+                          const badgeImage = getBadgeImage(v);
+                          return badgeImage ? (
+                            <img
+                              key={v}
+                              alt={v}
+                              src={badgeImage}
+                              style={{
+                                width: "auto",
+                                height: "20px",
+                                position: "relative",
+                                top: "50%",
+                                transform: "translate(0%, -50%)",
+                                marginRight: "7px",
+                              }}
+                            />
+                          ) : null;
+                        })
+                        .filter(Boolean)}
                 </div>
 
                 {showDisplayName ? (

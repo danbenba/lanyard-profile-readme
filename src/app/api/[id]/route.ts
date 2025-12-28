@@ -1,4 +1,6 @@
+import React from "react";
 import ProfileCard from "@/components/ProfileCard";
+import ErrorCard from "@/components/ErrorCard";
 import { isSnowflake } from "@/utils/snowflake";
 import { Root } from "@/utils/LanyardTypes";
 import { extractSearchParams } from "@/utils/extractSearchParams";
@@ -43,12 +45,48 @@ export async function GET(
     {
       cache: "no-store",
     }
-  ).then(async (res) => (await res.json()) as Root & { error?: string });
+  ).then(async (res) => {
+    const data = await res.json();
+    return data as Root & { error?: { code?: string; message?: string } };
+  });
 
-  if ("error" in lanyardData || !lanyardData.success) {
+  // Si erreur "user_not_monitored", afficher une carte d'erreur avec badges personnalisés
+  if (!lanyardData.success && lanyardData.error?.code === "user_not_monitored") {
+    const settings = await extractSearchParams(
+      Object.fromEntries(searchParams.entries()),
+      null as any // On passe null car on n'a pas de données
+    );
+
+    // Générer un SVG d'erreur avec les badges personnalisés
+    try {
+      const errorMessage = lanyardData.error?.message || "L'utilisateur n'est pas surveillé par Lanyard";
+      const svgString = ReactDOMServer.renderToStaticMarkup(
+        React.createElement(ErrorCard, {
+          settings: settings,
+          errorMessage: errorMessage,
+          userId: userId,
+        })
+      );
+
+      return new Response(svgString, {
+        headers: {
+          "Content-Type": "image/svg+xml",
+          "Cache-Control": "public, max-age=60, s-maxage=60",
+        },
+      });
+    } catch (error) {
+      console.error("Error generating error SVG:", error);
+    }
+  }
+
+  if (!lanyardData.success) {
+    const errorMsg = typeof lanyardData.error === "object" 
+      ? (lanyardData.error?.message || "Unknown error")
+      : (lanyardData.error || "Unknown error");
+    
     return Response.json(
       {
-        data: lanyardData.error as string,
+        data: errorMsg,
         success: false,
       },
       {

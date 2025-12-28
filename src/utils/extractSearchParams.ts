@@ -16,7 +16,7 @@ export const parseBadges = (string: string | undefined): Array<string> => {
 
 export function extractSearchParams(
   params: SearchParams,
-  data: Data,
+  data: Data | null,
   optimized?: boolean
 ) {
   const hideStatus = parseBool(params.hideStatus);
@@ -33,16 +33,16 @@ export function extractSearchParams(
   const hideSpotify = parseBool(params.hideSpotify);
 
   let hideTag = parseBool(params.hideTag);
-  if (!data.discord_user.primary_guild) hideTag = true;
+  if (!data?.discord_user?.primary_guild) hideTag = true;
 
   let hideDecoration = parseBool(params.hideDecoration);
-  if (!data.discord_user.avatar_decoration_data) hideDecoration = true;
+  if (!data?.discord_user?.avatar_decoration_data) hideDecoration = true;
 
   const ignoreAppId = parseAppId(params.ignoreAppId);
   const customBadges = parseBadges(params.customBadges);
 
   let hideDiscrim = parseBool(params.hideDiscrim);
-  if (hideDiscrim || data.discord_user.discriminator === "0")
+  if (hideDiscrim || data?.discord_user?.discriminator === "0")
     hideDiscrim = true;
 
   const showDisplayName = parseBool(params.showDisplayName);

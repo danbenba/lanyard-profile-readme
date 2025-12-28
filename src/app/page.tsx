@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, JSX } from "react";
+import React, { useState, JSX, useEffect } from "react";
 import { motion } from "motion/react";
 import { isSnowflake } from "@/utils/snowflake";
 import { IParameterInfo, PARAMETER_INFO } from "@/utils/parameters";
@@ -8,12 +8,16 @@ import * as Icon from "lucide-react";
 import { InfoTooltip } from "@/components/Popover";
 import { cn, filterLetters } from "@/utils/helpers";
 import { BadgeSelector } from "@/components/BadgeSelector";
+import ErrorCard from "@/components/ErrorCard";
+import { SkeletonCard } from "@/components/SkeletonCard";
+import { ProfilePreview } from "@/components/ProfilePreview";
 
 export default function Home() {
   const ORIGIN_URL =
-    process.env.NODE_ENV === "development"
+    process.env.NEXT_PUBLIC_ORIGIN_URL ||
+    (process.env.NODE_ENV === "development"
       ? "http://localhost:3000"
-      : "https://lanyard.cnrad.dev";
+      : "https://lanyard.cnrad.dev");
 
   const [userId, setUserId] = useState("");
   const [userError, setUserError] = useState<string | JSX.Element>();
@@ -33,24 +37,24 @@ export default function Home() {
       return setUserError("Invalid Discord ID");
   }
 
+  const urlParams = [
+    ...Object.keys(options).map(
+      (option) => `${option}=${options[option]}`
+    ),
+    ...(selectedBadges.length > 0
+      ? [`customBadges=${selectedBadges.join(",")}`]
+      : []),
+  ];
+
   const url = `${ORIGIN_URL}/api/${userId}${
-    Object.keys(options).length > 0 || selectedBadges.length > 0
-      ? `?${[
-          ...Object.keys(options).map(
-            (option) => `${option}=${options[option]}`
-          ),
-          ...(selectedBadges.length > 0
-            ? [`customBadges=${selectedBadges.join(",")}`]
-            : []),
-        ].join("&")}`
-      : ""
+    urlParams.length > 0 ? `?${urlParams.join("&")}` : ""
   }`;
 
   return (
     <>
       <main className="flex min-h-screen max-w-[100vw] flex-col items-center max-sm:px-4">
         <div className="relative mt-16 flex w-auto flex-row gap-8">
-          <MainSection url={url} userId={userId} className="max-lg:hidden" />
+          <MainSection url={url} userId={userId} selectedBadges={selectedBadges} className="max-lg:hidden" />
 
           <div className="w-full sm:max-w-[30rem]">
             <p className="text-left text-3xl font-semibold text-[#cecece] mb-2">
@@ -97,6 +101,7 @@ export default function Home() {
             <MainSection
               url={url}
               userId={userId}
+              selectedBadges={selectedBadges}
               className="block lg:hidden"
             />
 
@@ -261,31 +266,36 @@ export default function Home() {
                 })}
               </div>
 
-              <button
-                onClick={() => setShowBadgeSelector(!showBadgeSelector)}
-                className="flex flex-row items-center justify-center gap-2 mt-4 text-sm text-white/75 hover:text-white w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-full py-1.5 transition-colors duration-150 ease-out"
-              >
-                {showBadgeSelector ? (
-                  <>
-                    <Icon.ChevronUp size={14} />
-                    Masquer les badges
-                  </>
-                ) : (
-                  <>
-                    <Icon.Award size={14} />
-                    Personnaliser les badges
-                  </>
-                )}
-              </button>
+              {!options.hideBadges && (
+                <>
+                  <button
+                    onClick={() => setShowBadgeSelector(!showBadgeSelector)}
+                    className="flex flex-row items-center justify-center gap-2 mt-4 text-sm text-white/75 hover:text-white w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-full py-1.5 transition-colors duration-150 ease-out"
+                  >
+                    {showBadgeSelector ? (
+                      <>
+                        <Icon.ChevronUp size={14} />
+                        Masquer les badges
+                      </>
+                    ) : (
+                      <>
+                        <Icon.Award size={14} />
+                        Personnaliser les badges
+                      </>
+                    )}
+                  </button>
 
-              {showBadgeSelector && (
-                <div className="mt-4 p-4 border border-white/10 bg-zinc-900/50 rounded-lg">
-                  <BadgeSelector
-                    selectedBadges={selectedBadges}
-                    onBadgesChange={setSelectedBadges}
-                  />
-                </div>
+                  {showBadgeSelector && (
+                    <div className="mt-4 p-4 border border-white/10 bg-zinc-900/50 rounded-lg">
+                      <BadgeSelector
+                        selectedBadges={selectedBadges}
+                        onBadgesChange={setSelectedBadges}
+                      />
+                    </div>
+                  )}
+                </>
               )}
+
 
               <a
                 href="https://github.com/cnrad/lanyard-profile-readme?tab=readme-ov-file#options"
@@ -307,16 +317,30 @@ export default function Home() {
 const MainSection = ({
   url,
   userId,
+  selectedBadges,
   className,
 }: {
   url: string;
   userId: string;
+  selectedBadges: string[];
   className: string;
 }) => {
   const [copyState, setCopyState] = useState("Copy");
   const [outputType, setOutputType] = useState<"markdown" | "html" | "url">(
     "markdown"
   );
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [errorData, setErrorData] = useState<{
+    message: string;
+    settings: any;
+  } | null>(null);
+
+  // Réinitialiser l'erreur quand l'URL change
+  useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+  }, [url]);
 
   const copyContent = {
     markdown: `[![Discord Presence](${url})](https://discord.com/users/${userId})`,
@@ -331,14 +355,90 @@ const MainSection = ({
         className
       )}
     >
-      {userId.length > 0 && isSnowflake(userId) ? (
-        <img
-          src={url}
-          height={280}
-          width={500}
-          alt="Your Lanyard Banner"
-          className="mx-auto"
-        />
+          {userId.length > 0 && isSnowflake(userId) ? (
+        <>
+          {!imageError ? (
+            <ProfilePreview
+              imageUrl={url}
+              selectedBadges={selectedBadges}
+              userId={userId}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => {
+                // Vérifier si c'est une erreur JSON (utilisateur non surveillé)
+                fetch(url)
+                  .then((res) => {
+                    const contentType = res.headers.get("content-type");
+                    if (contentType?.includes("application/json")) {
+                      return res.json().then((data: any) => {
+                        if (!data.success && (data.error?.code === "user_not_monitored" || data.data?.code === "user_not_monitored")) {
+                          // Charger les paramètres pour l'ErrorCard
+                          const params = new URLSearchParams(url.split("?")[1] || "");
+                          const settings = {
+                            theme: params.get("theme") || "dark",
+                            bg: params.get("bg"),
+                            borderRadius: params.get("borderRadius") || "10px",
+                            customBadges: params.get("customBadges")?.split(",") || [],
+                          };
+                          setErrorData({
+                            message: data.error?.message || data.data?.message || "L'utilisateur n'est pas surveillé par Lanyard",
+                            settings: settings,
+                          });
+                          setImageError(true);
+                          setImageLoaded(true);
+                        } else {
+                          setImageError(true);
+                          setImageLoaded(true);
+                        }
+                      });
+                    } else {
+                      setImageError(true);
+                      setImageLoaded(true);
+                    }
+                  })
+                  .catch(() => {
+                    setImageError(true);
+                    setImageLoaded(true);
+                  });
+              }}
+            />
+          ) : null}
+          {imageLoaded && imageError && errorData ? (
+            <div className="w-full flex flex-col items-center gap-3">
+              <div className="w-full max-w-[410px]">
+                <ErrorCard
+                  settings={errorData.settings}
+                  errorMessage={errorData.message}
+                  userId={userId}
+                />
+              </div>
+              <button
+                onClick={() => {
+                  setImageError(false);
+                  setImageLoaded(false);
+                  setErrorData(null);
+                }}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                Réessayer
+              </button>
+            </div>
+          ) : imageLoaded && imageError ? (
+            <div className="w-full min-h-64 rounded-xl border border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center text-white/75 font-mono text-sm px-16 text-center gap-3">
+              <div className="text-red-400 text-4xl">⚠️</div>
+              <p className="font-semibold">Erreur lors du chargement</p>
+              <button
+                onClick={() => {
+                  setImageError(false);
+                  setImageLoaded(false);
+                }}
+                className="mt-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                Réessayer
+              </button>
+            </div>
+          ) : null}
+          {!imageLoaded && !imageError && <SkeletonCard />}
+        </>
       ) : (
         <div className="w-full min-h-64 rounded-xl border border-white/10 bg-gray-50/5 flex items-center justify-center text-white/25 font-mono text-sm px-16 text-center">
           Enter your Discord ID to preview your Lanyard Banner
