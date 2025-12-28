@@ -98,7 +98,7 @@ export async function GET(
           "Content-Length": svgBuffer.length.toString(),
           "Cache-Control": "public, max-age=60, s-maxage=60",
           "X-Content-Type-Options": "nosniff",
-          "X-Frame-Options": "DENY",
+           "X-Frame-Options": "SAMEORIGIN",
         },
       });
     } catch (error) {
@@ -150,7 +150,7 @@ export async function GET(
         "Content-Length": svgBuffer.length.toString(),
         "Cache-Control": "public, max-age=60, s-maxage=60",
         "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "DENY",
+         "X-Frame-Options": "SAMEORIGIN",
       },
     });
   } catch (error) {

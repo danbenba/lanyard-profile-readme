@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { getBadgeTooltipImage, getBadgeInfo } from "./BadgeSelector";
 
 interface ProfilePreviewProps {
@@ -20,7 +20,15 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
 }) => {
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [svgContent, setSvgContent] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Pour l'aperçu, utiliser directement l'URL de l'API dans l'iframe
+    // afin que les ressources relatives (/assets/...) se résolvent correctement.
+    if (!imageUrl) return;
+    setSvgContent("loaded");
+  }, [imageUrl, onLoad, onError]);
 
   // Position approximative des badges dans le profil (basé sur la structure Discord)
   // Les badges commencent après le nom d'utilisateur, environ à 80px de la gauche
@@ -46,14 +54,19 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = ({
     setTooltipPosition(null);
   };
 
+  if (!imageUrl) {
+    return null;
+  }
+
   return (
     <div ref={containerRef} className="relative inline-block">
-      <img
+      <iframe
         src={imageUrl}
-        alt="Profile"
-        className="mx-auto"
+        className="border-0 w-full"
+        style={{ height: "210px" }}
         onLoad={onLoad}
         onError={onError}
+        title="Profile Preview"
       />
       
       {/* Zones cliquables pour les tooltips des badges */}
