@@ -16,6 +16,28 @@ const nextConfig: NextConfig = {
         hostname: "discord.com",
       },
     ],
+    unoptimized: true,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "inline",
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+  },
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+        ],
+      },
+    ];
   },
 };
 

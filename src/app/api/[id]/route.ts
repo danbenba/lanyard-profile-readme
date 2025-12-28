@@ -5,6 +5,26 @@ import { isSnowflake } from "@/utils/snowflake";
 import { Root } from "@/utils/LanyardTypes";
 import { extractSearchParams } from "@/utils/extractSearchParams";
 import { fetchUserImages } from "@/utils/fetchUserImages";
+import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+function cleanSvgFromPreloadTags(content: string): string {
+  let cleaned = content.trim();
+  const preloadPattern = /<link[^>]*rel=["']preload["'][^>]*>/gi;
+  cleaned = cleaned.replace(preloadPattern, "");
+  
+  if (!cleaned.startsWith("<svg")) {
+    const svgIndex = cleaned.indexOf("<svg");
+    if (svgIndex > 0) {
+      cleaned = cleaned.substring(svgIndex);
+    }
+  }
+  
+  return cleaned.trim();
+}
 
 export async function GET(
   request: Request,
@@ -58,7 +78,7 @@ export async function GET(
 
     try {
       const errorMessage = lanyardData.error?.message || "L'utilisateur n'est pas surveillé par Lanyard";
-      const svgString = ReactDOMServer.renderToStaticMarkup(
+      let svgString = ReactDOMServer.renderToStaticMarkup(
         React.createElement(ErrorCard, {
           settings: settings,
           errorMessage: errorMessage,
@@ -66,11 +86,19 @@ export async function GET(
         })
       );
 
-      return new Response(svgString.trim(), {
+      svgString = cleanSvgFromPreloadTags(svgString);
+
+      const encoder = new TextEncoder();
+      const svgBuffer = encoder.encode(svgString);
+
+      return new Response(svgBuffer, {
+        status: 200,
         headers: {
           "Content-Type": "image/svg+xml; charset=utf-8",
+          "Content-Length": svgBuffer.length.toString(),
           "Cache-Control": "public, max-age=60, s-maxage=60",
           "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
         },
       });
     } catch (error) {
@@ -102,7 +130,7 @@ export async function GET(
   try {
     const images = await fetchUserImages(lanyardData.data, settings);
 
-    const svgString = ReactDOMServer.renderToStaticMarkup(
+    let svgString = ReactDOMServer.renderToStaticMarkup(
       await ProfileCard({
         data: lanyardData.data,
         settings: settings,
@@ -110,11 +138,19 @@ export async function GET(
       })
     );
 
-    return new Response(svgString.trim(), {
+    svgString = cleanSvgFromPreloadTags(svgString);
+
+    const encoder = new TextEncoder();
+    const svgBuffer = encoder.encode(svgString);
+
+    return new Response(svgBuffer, {
+      status: 200,
       headers: {
         "Content-Type": "image/svg+xml; charset=utf-8",
+        "Content-Length": svgBuffer.length.toString(),
         "Cache-Control": "public, max-age=60, s-maxage=60",
         "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
       },
     });
   } catch (error) {
