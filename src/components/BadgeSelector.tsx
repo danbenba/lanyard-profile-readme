@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Badges } from "@/utils/badges";
 import { cn } from "@/utils/helpers";
 import * as Icon from "lucide-react";
 
-// URLs des badges Nitro évolutifs (PNG pour affichage) (LOCAL)
 const NITRO_BADGE_PNG: Record<string, string> = {
   Nitro_Bronze: "/assets/subscriptions/badges/bronze.png",
   Nitro_Silver: "/assets/subscriptions/badges/silver.png",
@@ -17,7 +15,6 @@ const NITRO_BADGE_PNG: Record<string, string> = {
   Nitro_Opal: "/assets/subscriptions/badges/opal.png",
 };
 
-// URLs des badges Nitro évolutifs (SVG pour tooltips) (LOCAL)
 const NITRO_BADGE_SVG: Record<string, string> = {
   Nitro_Bronze: "/assets/subscriptions/bronze.svg",
   Nitro_Silver: "/assets/subscriptions/silver.svg",
@@ -29,7 +26,6 @@ const NITRO_BADGE_SVG: Record<string, string> = {
   Nitro_Opal: "/assets/subscriptions/opal.svg",
 };
 
-// URLs des badges Boost (LOCAL)
 const BOOST_BADGE_URLS: Record<string, string> = {
   Boost_1_Month: "/assets/boosts/discordboost1.svg",
   Boost_2_Months: "/assets/boosts/discordboost2.svg",
@@ -42,7 +38,6 @@ const BOOST_BADGE_URLS: Record<string, string> = {
   Boost_2_Years: "/assets/boosts/discordboost9.svg",
 };
 
-// Informations détaillées pour les tooltips
 const BADGE_INFO: Record<string, { description: string; earnedBy: string }> = {
   Discord_Employee: {
     description: "Discord Staff",
@@ -194,9 +189,7 @@ const BADGE_INFO: Record<string, { description: string; earnedBy: string }> = {
   },
 };
 
-// Liste complète de tous les badges Discord disponibles
 export const ALL_DISCORD_BADGES = [
-  // General Badges
   { key: "Discord_Employee", name: "Discord Staff", category: "General" },
   { key: "Partnered_Server_Owner", name: "Partnered Server Owner", category: "General" },
   { key: "HypeSquad_Events", name: "HypeSquad Events", category: "General" },
@@ -208,22 +201,14 @@ export const ALL_DISCORD_BADGES = [
   { key: "Quest_Completed", name: "Completed a Quest", category: "General" },
   { key: "Discord_Lootbox", name: "A clown, for a limited time", category: "General" },
   { key: "Original_Username", name: "Originally known as", category: "General" },
-  
-  // Bot Badges
   { key: "Supports_Commands", name: "Supports Commands", category: "Bot" },
   { key: "Uses_Automod", name: "Uses Automod", category: "Bot" },
   { key: "Premium_Bot", name: "This server has _App Name_ premium", category: "Bot" },
-  
-  // HypeSquad - Tous dans la catégorie HypeSquad
   { key: "House_Balance", name: "HypeSquad Balance", category: "HypeSquad", variant: "Balance" },
   { key: "House_Bravery", name: "HypeSquad Bravery", category: "HypeSquad", variant: "Bravery" },
   { key: "House_Brilliance", name: "HypeSquad Brilliance", category: "HypeSquad", variant: "Brilliance" },
-  
-  // Bug Hunter - Tous dans la catégorie Bug Hunter
   { key: "Bug_Hunter_Level_1", name: "Bug Hunter Tier 1", category: "Bug Hunter", variant: "Tier 1" },
   { key: "Bug_Hunter_Level_2", name: "Bug Hunter Tier 2", category: "Bug Hunter", variant: "Tier 2" },
-  
-  // Nitro - Tous les tiers dans la catégorie Nitro
   { key: "Nitro", name: "Discord Nitro", category: "Nitro", variant: "Base" },
   { key: "Nitro_Bronze", name: "Nitro Bronze (1 mois)", category: "Nitro", variant: "1 mois" },
   { key: "Nitro_Silver", name: "Nitro Silver (3 mois)", category: "Nitro", variant: "3 mois" },
@@ -233,8 +218,6 @@ export const ALL_DISCORD_BADGES = [
   { key: "Nitro_Emerald", name: "Nitro Emerald (36 mois)", category: "Nitro", variant: "36 mois" },
   { key: "Nitro_Ruby", name: "Nitro Ruby (60 mois)", category: "Nitro", variant: "60 mois" },
   { key: "Nitro_Opal", name: "Nitro Opal (72+ mois)", category: "Nitro", variant: "72+ mois" },
-  
-  // Boost - Tous les badges Boost
   { key: "Boost_1_Month", name: "Server boosting (1 Month)", category: "Boost", variant: "1 Month" },
   { key: "Boost_2_Months", name: "Server boosting (2 Months)", category: "Boost", variant: "2 Months" },
   { key: "Boost_3_Months", name: "Server boosting (3 Months)", category: "Boost", variant: "3 Months" },
@@ -249,10 +232,23 @@ export const ALL_DISCORD_BADGES = [
 interface BadgeSelectorProps {
   selectedBadges: string[];
   onBadgesChange: (badges: string[]) => void;
+  autoDetectedBadges?: string[];
 }
 
-// Mapping des nouveaux badges vers leurs assets locaux (PNG pour affichage)
-const NEW_BADGE_URLS: Record<string, string> = {
+const ALL_BADGE_ASSETS: Record<string, string> = {
+  Discord_Employee: "/assets/discordstaff.svg",
+  Partnered_Server_Owner: "/assets/discordpartner.svg",
+  HypeSquad_Events: "/assets/hypesquadevents.svg",
+  House_Brilliance: "/assets/hypesquadbrilliance.svg",
+  House_Bravery: "/assets/hypesquadbravery.svg",
+  House_Balance: "/assets/hypesquadbalance.svg",
+  Early_Verified_Bot_Developer: "/assets/discordbotdev.svg",
+  Active_Developer: "/assets/activedeveloper.svg",
+  Early_Supporter: "/assets/discordearlysupporter.svg",
+  Discord_Certified_Moderator: "/assets/discordmod.svg",
+  Nitro: "/assets/discordnitro.svg",
+  Bug_Hunter_Level_1: "/assets/discordbughunter1.svg",
+  Bug_Hunter_Level_2: "/assets/discordbughunter2.svg",
   Orbs_Apprentice: "/assets/orb.svg",
   Quest_Completed: "/assets/quest.png",
   Discord_Lootbox: "/assets/special/discordlootbox.svg",
@@ -264,32 +260,17 @@ const NEW_BADGE_URLS: Record<string, string> = {
   ...BOOST_BADGE_URLS,
 };
 
-// Helper pour obtenir l'image d'un badge (PNG pour affichage réduit)
 export const getBadgeImage = (badgeKey: string): string | undefined => {
-  // Badges avec URLs locales
-  if (NEW_BADGE_URLS[badgeKey]) {
-    return NEW_BADGE_URLS[badgeKey];
-  }
-  // Badges normaux (base64)
-  const badge = Badges[badgeKey as keyof typeof Badges];
-  return badge ? `data:image/png;base64,${badge}` : undefined;
+  return ALL_BADGE_ASSETS[badgeKey];
 };
 
-// Helper pour obtenir l'image SVG d'un badge pour tooltip (gros format)
 export const getBadgeTooltipImage = (badgeKey: string): string | undefined => {
-  // Badges Nitro : utiliser SVG pour tooltip
   if (NITRO_BADGE_SVG[badgeKey]) {
     return NITRO_BADGE_SVG[badgeKey];
   }
-  // Badges Boost : utiliser SVG
-  if (BOOST_BADGE_URLS[badgeKey]) {
-    return BOOST_BADGE_URLS[badgeKey];
-  }
-  // Pour les autres badges, utiliser l'image normale
-  return getBadgeImage(badgeKey);
+  return ALL_BADGE_ASSETS[badgeKey];
 };
 
-// Helper pour obtenir les informations d'un badge
 export const getBadgeInfo = (badgeKey: string) => {
   return BADGE_INFO[badgeKey] || { description: "", earnedBy: "" };
 };
@@ -297,6 +278,7 @@ export const getBadgeInfo = (badgeKey: string) => {
 export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
   selectedBadges,
   onBadgesChange,
+  autoDetectedBadges = [],
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -306,6 +288,9 @@ export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
   );
 
   const availableBadges = ALL_DISCORD_BADGES.filter((badge) => {
+    if (autoDetectedBadges.includes(badge.key)) {
+      return false;
+    }
     const matchesSearch =
       badge.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       badge.key.toLowerCase().includes(searchQuery.toLowerCase());
@@ -314,7 +299,6 @@ export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
     return matchesSearch && matchesCategory;
   });
 
-  // Catégories avec sélection unique
   const EXCLUSIVE_CATEGORIES = ["HypeSquad", "Bug Hunter", "Nitro", "Boost"];
 
   const toggleBadge = (badgeKey: string) => {
@@ -323,7 +307,6 @@ export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
 
     let filtered = selectedBadges;
 
-    // Si c'est une catégorie exclusive, retirer les autres badges de cette catégorie
     if (EXCLUSIVE_CATEGORIES.includes(badge.category)) {
       filtered = selectedBadges.filter((b) => {
         const otherBadge = ALL_DISCORD_BADGES.find((badge) => badge.key === b);
@@ -331,7 +314,6 @@ export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
       });
     }
 
-    // Toggle le badge
     if (filtered.includes(badgeKey)) {
       onBadgesChange(filtered.filter((b) => b !== badgeKey));
     } else {
@@ -396,7 +378,6 @@ export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {availableBadges.map((badge) => {
-              // Vérifier si ce badge spécifique est sélectionné
               const isSelected = selectedBadges.includes(badge.key);
 
               const badgeImage = getBadgeImage(badge.key);
@@ -451,7 +432,6 @@ export const BadgeSelector: React.FC<BadgeSelectorProps> = ({
                     <div className="pointer-events-none invisible group-hover:visible absolute z-[100] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 px-3 py-2 bg-gray-900/95 backdrop-blur-sm text-white text-xs rounded-lg shadow-xl border border-white/20">
                       <div className="flex items-start gap-2">
                         {(() => {
-                          // Pour les badges Nitro, utiliser SVG dans le tooltip
                           const tooltipImage = getBadgeTooltipImage(badge.key);
                           const isNitro = badge.key.startsWith("Nitro_");
                           return tooltipImage ? (

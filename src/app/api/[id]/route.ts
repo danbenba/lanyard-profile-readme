@@ -6,6 +6,8 @@ import { Root } from "@/utils/LanyardTypes";
 import { extractSearchParams } from "@/utils/extractSearchParams";
 import { fetchUserImages } from "@/utils/fetchUserImages";
 
+export const runtime = 'edge';
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -50,14 +52,12 @@ export async function GET(
     return data as Root & { error?: { code?: string; message?: string } };
   });
 
-  // Si erreur "user_not_monitored", afficher une carte d'erreur avec badges personnalisés
   if (!lanyardData.success && lanyardData.error?.code === "user_not_monitored") {
     const settings = await extractSearchParams(
       Object.fromEntries(searchParams.entries()),
-      null as any // On passe null car on n'a pas de données
+      null as any
     );
 
-    // Générer un SVG d'erreur avec les badges personnalisés
     try {
       const errorMessage = lanyardData.error?.message || "L'utilisateur n'est pas surveillé par Lanyard";
       const svgString = ReactDOMServer.renderToStaticMarkup(
@@ -68,10 +68,11 @@ export async function GET(
         })
       );
 
-      return new Response(svgString, {
+      return new Response(svgString.trim(), {
         headers: {
-          "Content-Type": "image/svg+xml",
+          "Content-Type": "image/svg+xml; charset=utf-8",
           "Cache-Control": "public, max-age=60, s-maxage=60",
+          "X-Content-Type-Options": "nosniff",
         },
       });
     } catch (error) {
@@ -100,11 +101,9 @@ export async function GET(
     lanyardData.data
   );
 
-  // Generate SVG
   try {
     const images = await fetchUserImages(lanyardData.data, settings);
 
-    // Render React SVG component to string
     const svgString = ReactDOMServer.renderToStaticMarkup(
       await ProfileCard({
         data: lanyardData.data,
@@ -113,11 +112,11 @@ export async function GET(
       })
     );
 
-    // Return SVG with appropriate headers
-    return new Response(svgString, {
+    return new Response(svgString.trim(), {
       headers: {
-        "Content-Type": "image/svg+xml",
+        "Content-Type": "image/svg+xml; charset=utf-8",
         "Cache-Control": "public, max-age=60, s-maxage=60",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {

@@ -1,6 +1,5 @@
 import React, { DetailedHTMLProps, HTMLAttributes } from "react";
 import { ProfileSettings } from "@/utils/parameters";
-import { Badges } from "@/utils/badges";
 import { getBadgeImage } from "@/utils/badgeImages";
 
 interface ErrorCardProps {

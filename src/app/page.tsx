@@ -11,6 +11,7 @@ import { BadgeSelector } from "@/components/BadgeSelector";
 import ErrorCard from "@/components/ErrorCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { ProfilePreview } from "@/components/ProfilePreview";
+import { getFlags } from "@/utils/helpers";
 
 export default function Home() {
   const ORIGIN_URL =
@@ -26,15 +27,36 @@ export default function Home() {
   const [options, setOptions] = useState<Record<string, string | boolean>>({});
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [showBadgeSelector, setShowBadgeSelector] = useState(false);
+  const [autoDetectedBadges, setAutoDetectedBadges] = useState<string[]>([]);
 
   async function onLoadDiscordId(userId: string) {
     setUserId(userId);
     setIsLoaded(false);
     setUserError(undefined);
+    setAutoDetectedBadges([]);
 
     if (userId.length < 1) return;
     if (userId.length > 0 && !isSnowflake(userId))
       return setUserError("Invalid Discord ID");
+
+    if (isSnowflake(userId)) {
+      try {
+        const response = await fetch(`https://api.lanyard.rest/v1/users/${userId}`);
+        const data = await response.json() as { success?: boolean; data?: { discord_user?: { public_flags?: number; avatar?: string } } };
+        if (data.success && data.data?.discord_user) {
+          const flags: string[] = [];
+          if (data.data.discord_user.public_flags) {
+            flags.push(...getFlags(data.data.discord_user.public_flags));
+          }
+          if (data.data.discord_user.avatar?.includes("a_")) {
+            flags.push("Nitro");
+          }
+          setAutoDetectedBadges(flags);
+          setSelectedBadges((prev) => prev.filter((badge) => !flags.includes(badge)));
+        }
+      } catch (error) {
+      }
+    }
   }
 
   const urlParams = [
@@ -290,6 +312,7 @@ export default function Home() {
                       <BadgeSelector
                         selectedBadges={selectedBadges}
                         onBadgesChange={setSelectedBadges}
+                        autoDetectedBadges={autoDetectedBadges}
                       />
                     </div>
                   )}
@@ -336,7 +359,6 @@ const MainSection = ({
     settings: any;
   } | null>(null);
 
-  // Réinitialiser l'erreur quand l'URL change
   useEffect(() => {
     setImageError(false);
     setImageLoaded(false);
@@ -364,14 +386,12 @@ const MainSection = ({
               userId={userId}
               onLoad={() => setImageLoaded(true)}
               onError={() => {
-                // Vérifier si c'est une erreur JSON (utilisateur non surveillé)
                 fetch(url)
                   .then((res) => {
                     const contentType = res.headers.get("content-type");
                     if (contentType?.includes("application/json")) {
                       return res.json().then((data: any) => {
                         if (!data.success && (data.error?.code === "user_not_monitored" || data.data?.code === "user_not_monitored")) {
-                          // Charger les paramètres pour l'ErrorCard
                           const params = new URLSearchParams(url.split("?")[1] || "");
                           const settings = {
                             theme: params.get("theme") || "dark",

@@ -1,6 +1,3 @@
-import { Badges } from "./badges";
-
-// URLs des badges Nitro évolutifs (PNG pour affichage) (LOCAL)
 const NITRO_BADGE_PNG: Record<string, string> = {
   Nitro_Bronze: "/assets/subscriptions/badges/bronze.png",
   Nitro_Silver: "/assets/subscriptions/badges/silver.png",
@@ -12,7 +9,17 @@ const NITRO_BADGE_PNG: Record<string, string> = {
   Nitro_Opal: "/assets/subscriptions/badges/opal.png",
 };
 
-// URLs des badges Boost (LOCAL)
+const NITRO_BADGE_SVG: Record<string, string> = {
+  Nitro_Bronze: "/assets/subscriptions/bronze.svg",
+  Nitro_Silver: "/assets/subscriptions/silver.svg",
+  Nitro_Gold: "/assets/subscriptions/gold.svg",
+  Nitro_Platinum: "/assets/subscriptions/platinum.svg",
+  Nitro_Diamond: "/assets/subscriptions/diamond.svg",
+  Nitro_Emerald: "/assets/subscriptions/emerald.svg",
+  Nitro_Ruby: "/assets/subscriptions/ruby.svg",
+  Nitro_Opal: "/assets/subscriptions/opal.svg",
+};
+
 const BOOST_BADGE_URLS: Record<string, string> = {
   Boost_1_Month: "/assets/boosts/discordboost1.svg",
   Boost_2_Months: "/assets/boosts/discordboost2.svg",
@@ -25,8 +32,20 @@ const BOOST_BADGE_URLS: Record<string, string> = {
   Boost_2_Years: "/assets/boosts/discordboost9.svg",
 };
 
-// Mapping des nouveaux badges vers leurs assets locaux (PNG pour affichage)
-const NEW_BADGE_URLS: Record<string, string> = {
+const ALL_BADGE_ASSETS: Record<string, string> = {
+  Discord_Employee: "/assets/discordstaff.svg",
+  Partnered_Server_Owner: "/assets/discordpartner.svg",
+  HypeSquad_Events: "/assets/hypesquadevents.svg",
+  House_Brilliance: "/assets/hypesquadbrilliance.svg",
+  House_Bravery: "/assets/hypesquadbravery.svg",
+  House_Balance: "/assets/hypesquadbalance.svg",
+  Early_Verified_Bot_Developer: "/assets/discordbotdev.svg",
+  Active_Developer: "/assets/activedeveloper.svg",
+  Early_Supporter: "/assets/discordearlysupporter.svg",
+  Discord_Certified_Moderator: "/assets/discordmod.svg",
+  Nitro: "/assets/discordnitro.svg",
+  Bug_Hunter_Level_1: "/assets/discordbughunter1.svg",
+  Bug_Hunter_Level_2: "/assets/discordbughunter2.svg",
   Orbs_Apprentice: "/assets/orb.svg",
   Quest_Completed: "/assets/quest.png",
   Discord_Lootbox: "/assets/special/discordlootbox.svg",
@@ -38,15 +57,14 @@ const NEW_BADGE_URLS: Record<string, string> = {
   ...BOOST_BADGE_URLS,
 };
 
-// Helper pour obtenir l'image d'un badge (PNG pour affichage réduit)
-// Version serveur - peut être utilisée dans les composants serveur
 export const getBadgeImage = (badgeKey: string): string | undefined => {
-  // Badges avec URLs locales
-  if (NEW_BADGE_URLS[badgeKey]) {
-    return NEW_BADGE_URLS[badgeKey];
+  return ALL_BADGE_ASSETS[badgeKey];
+};
+
+export const getBadgeTooltipImage = (badgeKey: string): string | undefined => {
+  if (NITRO_BADGE_SVG[badgeKey]) {
+    return NITRO_BADGE_SVG[badgeKey];
   }
-  // Badges normaux (base64)
-  const badge = Badges[badgeKey as keyof typeof Badges];
-  return badge ? `data:image/png;base64,${badge}` : undefined;
+  return ALL_BADGE_ASSETS[badgeKey];
 };
 

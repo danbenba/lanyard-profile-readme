@@ -1,5 +1,4 @@
 import { Activity, Data } from "@/utils/LanyardTypes";
-import { Badges, UnknownIconDark, UnknownIconLight } from "@/utils/badges";
 import { elapsedTime, getFlags } from "@/utils/helpers";
 import { ProfileSettings } from "@/utils/parameters";
 import React, { DetailedHTMLProps, HTMLAttributes } from "react";
@@ -74,11 +73,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   let flags: string[] = [];
   
-  // Si des badges personnalisés sont définis, les utiliser
   if (settings.customBadges && settings.customBadges.length > 0) {
     flags = settings.customBadges;
   } else {
-    // Sinon, utiliser les badges réels de l'utilisateur
     flags = getFlags(data.discord_user.public_flags);
     if (data.discord_user.avatar && data.discord_user.avatar.includes("a_"))
       flags.push("Nitro");
@@ -422,9 +419,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   />
                 ) : (
                   <img
-                    src={`data:image/png;base64,${
-                      theme === "dark" ? UnknownIconLight : UnknownIconDark
-                    }`}
+                    src={theme === "dark" ? "/assets/special/System.svg" : "/assets/special/Beta.svg"}
                     alt="Unknown Icon"
                     style={{
                       width: "70px",
@@ -542,10 +537,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               }}
             >
               <img
-                src={`data:image/png;base64,${
+                src={
                   albumCover ??
-                  (theme === "dark" ? UnknownIconLight : UnknownIconDark)
-                }`}
+                  (theme === "dark" ? "/assets/special/System.svg" : "/assets/special/Beta.svg")
+                }
                 alt="Album Cover"
                 style={{
                   border: data.spotify.album_art_url

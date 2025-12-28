@@ -1,6 +1,3 @@
-// import sharp from "sharp";
-import { UnknownIconDark, UnknownIconLight } from "./badges";
-
 export const encodeBase64 = async (
   url: string,
   size: number,
@@ -12,10 +9,15 @@ export const encodeBase64 = async (
     response = await fetch(url, {
       cache: "force-cache",
     })
-      .then((res) => {
-        // Show unknown icons if media could not be fetched
+      .then(async (res) => {
         if (!res.ok) {
-          response = theme === "dark" ? UnknownIconLight : UnknownIconDark;
+          const fallbackUrl = theme === "dark" ? "/assets/special/System.svg" : "/assets/special/Beta.svg";
+          const fallbackRes = await fetch(fallbackUrl);
+          if (fallbackRes.ok) {
+            const blob = await fallbackRes.blob();
+            const buffer = Buffer.from(await blob.arrayBuffer()) as Buffer;
+            return buffer.toString("base64");
+          }
           throw new Error(`not ok: ${res}`, { cause: res });
         }
 
@@ -23,17 +25,6 @@ export const encodeBase64 = async (
       })
       .then(async (blob) => {
         const buffer = Buffer.from(await blob.arrayBuffer()) as Buffer;
-
-        // TODO: sharp fucks everything up with opennext/cloudflare (can't read 'definition' of undefined, reading `routeModule` in generated worker code). fix this later
-        // // sharp for some reason doesn't work with animated decorations, but so be it because when animated it's >1mb
-        // if (size) {
-        //   buffer = await sharp(buffer, { animated: true })
-        //     .webp({
-        //       quality: 75,
-        //     })
-        //     .resize(size)
-        //     .toBuffer();
-        // }
 
         return buffer.toString("base64");
       });
