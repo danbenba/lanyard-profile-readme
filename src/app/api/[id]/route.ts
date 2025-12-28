@@ -6,8 +6,6 @@ import { Root } from "@/utils/LanyardTypes";
 import { extractSearchParams } from "@/utils/extractSearchParams";
 import { fetchUserImages } from "@/utils/fetchUserImages";
 
-export const runtime = 'edge';
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
