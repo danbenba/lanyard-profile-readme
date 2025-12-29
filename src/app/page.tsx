@@ -5,13 +5,29 @@ import { motion } from "motion/react";
 import { isSnowflake } from "@/utils/snowflake";
 import { IParameterInfo, PARAMETER_INFO } from "@/utils/parameters";
 import * as Icon from "lucide-react";
-import { InfoTooltip } from "@/components/Popover";
-import { cn, filterLetters } from "@/utils/helpers";
+import { cn, filterLetters } from "@/lib/utils";
 import { BadgeSelector } from "@/components/BadgeSelector";
 import ErrorCard from "@/components/ErrorCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { ProfilePreview } from "@/components/ProfilePreview";
 import { getFlags } from "@/utils/helpers";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider
+} from "@/components/ui/tooltip";
 
 export default function Home() {
   const ORIGIN_URL =
@@ -68,9 +84,8 @@ export default function Home() {
       : []),
   ];
 
-  const url = `${ORIGIN_URL}/api/${userId}${
-    urlParams.length > 0 ? `?${urlParams.join("&")}` : ""
-  }`;
+  const url = `${ORIGIN_URL}/api/${userId}${urlParams.length > 0 ? `?${urlParams.join("&")}` : ""
+    }`;
 
   return (
     <>
@@ -97,8 +112,8 @@ export default function Home() {
             </p>
 
             <div className="flex h-[2.25rem] w-full flex-row gap-2">
-              <input
-                className="w-full rounded-lg border border-white/10 bg-transparent px-2.5 py-1.5 font-mono text-sm text-gray-200 transition-colors duration-150 ease-out focus:border-white/50 focus:outline-none"
+              <Input
+                className="font-mono text-sm shadow-none"
                 onChange={(e) => onLoadDiscordId(e.target.value)}
                 value={userId || ""}
                 placeholder="Enter your Discord ID"
@@ -141,15 +156,25 @@ export default function Home() {
                         className="flex flex-col gap-1.5"
                       >
                         <div className="flex items-center gap-2">
-                          <p className="text-sm text-gray-300">{item.title}</p>
-                          <InfoTooltip
-                            content={item.description || "Unknown"}
-                          />
+                          <Label className="text-sm font-normal text-muted-foreground">{item.title}</Label>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Icon.InfoIcon
+                                  size={14}
+                                  className="rounded-md text-zinc-700 transition hover:text-gray-400 cursor-help"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {item.description || "Unknown"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
 
                         {item.type === "string" && (
-                          <input
-                            className="relative h-8 w-full appearance-none rounded-md border border-white/10 bg-transparent px-2 py-0.5 text-sm outline-none transition-all duration-150 ease-out placeholder:text-white/30 focus:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+                          <Input
+                            className="relative h-8 w-full border-zinc-800 bg-zinc-950/50 px-2 py-0.5 text-sm shadow-none placeholder:text-white/30"
                             placeholder={item.options?.placeholder || "..."}
                             onChange={(e) => {
                               if (e.target.value.length < 1) {
@@ -181,48 +206,33 @@ export default function Home() {
                         )}
 
                         {item.type === "list" && (
-                          <div className="relative">
-                            <select
-                              value={(options[item.parameter] as string) || ""}
-                              onChange={(e) => {
-                                if (e.target.value.length < 1) {
-                                  const prevOptions = { ...options };
-                                  delete prevOptions[item.parameter];
-                                  return setOptions(prevOptions);
-                                }
+                          <Select
+                            value={(options[item.parameter] as string) || ""}
+                            onValueChange={(value) => {
+                              if (value === "none_value") {
+                                const prevOptions = { ...options };
+                                delete prevOptions[item.parameter];
+                                return setOptions(prevOptions);
+                              }
 
-                                setOptions((prev) => ({
-                                  ...prev,
-                                  [item.parameter]: e.target.value,
-                                }));
-                              }}
-                              className={cn(
-                                "relative h-8 w-full appearance-none rounded-md border border-white/10 bg-transparent px-2 py-0.5 text-sm outline-none transition-all duration-150 ease-out placeholder:text-white/30 focus:border-white/50 disabled:cursor-not-allowed disabled:opacity-50",
-                                {
-                                  "text-white/30":
-                                    !options[item.parameter] ||
-                                    options[item.parameter] === "",
-                                }
-                              )}
-                            >
-                              <option value="" className="bg-background">
-                                None
-                              </option>
+                              setOptions((prev) => ({
+                                ...prev,
+                                [item.parameter]: value,
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="h-8 w-full border-zinc-800 bg-zinc-950/50 text-sm shadow-none">
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-950 border-zinc-800 text-white">
+                              <SelectItem value="none_value">None</SelectItem>
                               {item.options.list.map((option) => (
-                                <option
-                                  value={option.value}
-                                  key={option.value}
-                                  className="bg-background"
-                                >
+                                <SelectItem value={option.value} key={option.value}>
                                   {option.name}
-                                </option>
+                                </SelectItem>
                               ))}
-                            </select>
-                            <Icon.ChevronDown
-                              size={14}
-                              className="absolute right-2 top-0 my-auto flex h-full text-white/50"
-                            />
-                          </div>
+                            </SelectContent>
+                          </Select>
                         )}
                       </div>
                     );
@@ -240,26 +250,18 @@ export default function Home() {
                   return (
                     <div
                       key={item.parameter}
-                      className="flex flex-row items-start gap-2.5 text-sm"
+                      className="flex flex-row items-center gap-2.5 text-sm"
                     >
-                      <input
-                        type="checkbox"
-                        className={cn(
-                          "mt-0.5 max-h-4 min-h-4 min-w-4 max-w-4 cursor-pointer appearance-none before:overflow-clip before:rounded-[0.25rem] after:absolute after:h-4 after:w-4 after:rounded-[0.25rem] after:border after:border-white/10 after:transition-all after:duration-150 after:ease-out",
-                          {
-                            "after:border-gray-200/50 after:bg-gray-500/40":
-                              options[item.parameter] === !item.invertBoolean,
-                            "after:bg-zinc-700/10 after:hover:bg-zinc-700/25":
-                              options[item.parameter] !== !item.invertBoolean,
-                          }
-                        )}
-                        onChange={(e) => {
-                          if (e.target.checked) {
+                      <Checkbox
+                        id={item.parameter}
+                        checked={options[item.parameter] === !item.invertBoolean}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
                             setOptions((prev) => ({
                               ...prev,
                               [item.parameter]: item.invertBoolean
-                                ? !e.target.checked
-                                : e.target.checked,
+                                ? false
+                                : true,
                             }));
                           } else {
                             const prevOptions = { ...options };
@@ -269,8 +271,9 @@ export default function Home() {
                         }}
                       />
 
-                      <p
-                        className="text-gray-300"
+                      <Label
+                        htmlFor={item.parameter}
+                        className="text-gray-300 font-normal cursor-pointer"
                         style={{
                           textDecoration: PARAMETER_INFO.find(
                             (p) => p.parameter === item.parameter
@@ -280,9 +283,21 @@ export default function Home() {
                         }}
                       >
                         {item.title}
-                      </p>
+                      </Label>
 
-                      <InfoTooltip content={item.description || "Unknown"} />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Icon.InfoIcon
+                              size={14}
+                              className="rounded-md text-zinc-700 transition hover:text-gray-400 cursor-help"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {item.description || "Unknown"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   );
                 })}
@@ -290,9 +305,10 @@ export default function Home() {
 
               {!options.hideBadges && (
                 <>
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => setShowBadgeSelector(!showBadgeSelector)}
-                    className="flex flex-row items-center justify-center gap-2 mt-4 text-sm text-white/75 hover:text-white w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-full py-1.5 transition-colors duration-150 ease-out"
+                    className="flex flex-row items-center justify-center gap-2 mt-4 text-sm w-full rounded-full"
                   >
                     {showBadgeSelector ? (
                       <>
@@ -305,7 +321,7 @@ export default function Home() {
                         Personnaliser les badges
                       </>
                     )}
-                  </button>
+                  </Button>
 
                   {showBadgeSelector && (
                     <div className="mt-4 p-4 border border-white/10 bg-zinc-900/50 rounded-lg">
@@ -320,15 +336,20 @@ export default function Home() {
               )}
 
 
-              <a
-                href="https://github.com/cnrad/lanyard-profile-readme?tab=readme-ov-file#options"
-                rel="noreferrer noopener"
-                target="_blank"
-                className="flex flex-row items-center justify-center gap-2 mt-4 text-sm text-white/75 hover:text-white w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-full py-1.5 transition-colors duration-150 ease-out"
+              <Button
+                variant="outline"
+                asChild
+                className="flex flex-row items-center justify-center gap-2 mt-4 text-sm w-full rounded-full"
               >
-                More info
-                <Icon.ExternalLink size={14} />
-              </a>
+                <a
+                  href="https://github.com/cnrad/lanyard-profile-readme?tab=readme-ov-file#options"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  More info
+                  <Icon.ExternalLink size={14} />
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -377,7 +398,7 @@ const MainSection = ({
         className
       )}
     >
-          {userId.length > 0 && isSnowflake(userId) ? (
+      {userId.length > 0 && isSnowflake(userId) ? (
         <>
           {!imageError ? (
             <ProfilePreview
@@ -467,21 +488,20 @@ const MainSection = ({
 
       <div className="mt-4 grid grid-cols-3 gap-1">
         {(["markdown", "html", "url"] as const).map((type) => (
-          <button
+          <Button
             key={type}
+            variant={outputType === type ? "secondary" : "ghost"}
+            size="sm"
             className={cn(
-              "rounded-md border border-zinc-800 px-1.5 py-1 font-mono text-sm font-medium uppercase tracking-wide text-white/50 transition-colors duration-100 ease-out cursor-pointer",
+              "rounded-md border border-zinc-800 font-mono text-sm font-medium uppercase tracking-wide transition-colors duration-100 ease-out",
               {
-                "border-white/30 bg-zinc-900 font-semibold text-white/75":
-                  outputType === type,
-                "hover:border-white/15 hover:bg-zinc-700/25":
-                  outputType !== type,
+                "border-white/30 font-semibold": outputType === type,
               }
             )}
             onClick={() => setOutputType(type)}
           >
             {type}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -489,8 +509,9 @@ const MainSection = ({
         {copyContent[outputType]}
       </div>
 
-      <button
-        className="w-full rounded-md bg-zinc-900 border border-zinc-800 px-3 py-1 font-mono text-sm font-medium text-white/50 transition-colors duration-75 ease-out hover:bg-zinc-800/75 hover:text-white cursor-pointer"
+      <Button
+        variant="outline"
+        className="w-full mt-4 bg-zinc-900 border border-zinc-800 font-mono text-sm font-medium transition-colors duration-75 ease-out hover:bg-zinc-800/75 hover:text-white"
         onClick={() => {
           navigator.clipboard.writeText(copyContent[outputType]);
           setCopyState("Copied!");
@@ -498,7 +519,7 @@ const MainSection = ({
         }}
       >
         {copyState}
-      </button>
+      </Button>
     </div>
   );
 };

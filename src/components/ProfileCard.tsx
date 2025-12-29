@@ -2,7 +2,8 @@ import { Activity, Data } from "@/utils/LanyardTypes";
 import { elapsedTime, getFlags } from "@/utils/helpers";
 import { ProfileSettings } from "@/utils/parameters";
 import React, { DetailedHTMLProps, HTMLAttributes } from "react";
-import { getBadgeImage } from "@/utils/badgeImages";
+import { getBadgeImage, getBadgeTooltipImage } from "@/utils/badgeImages";
+import { getBadgeInfo } from "@/utils/badgeInfo";
 
 interface ProfileCardProps {
   settings: ProfileSettings;
@@ -40,6 +41,10 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     clanBackgroundColor,
     borderRadius = "10px",
     idleMessage = "I'm not currently doing anything!",
+    nameColor,
+    nameGradientStart,
+    nameGradientEnd,
+    nameFont
   } = settings;
 
   const {
@@ -72,7 +77,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   }
 
   let flags: string[] = [];
-  
+
   if (settings.customBadges && settings.customBadges.length > 0) {
     flags = settings.customBadges;
   } else {
@@ -130,6 +135,26 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     >
   ) => <div {...props}>{props.children}</div>;
 
+  const useGradient = nameGradientStart && nameGradientEnd;
+
+  const nameStyle: React.CSSProperties = {
+    fontSize: "1.15rem",
+    margin: "0 12px 0 0",
+    whiteSpace: "nowrap",
+    fontFamily: nameFont === "gg sans" ? "'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif" : nameFont,
+    ...(useGradient ? {
+      backgroundImage: `linear-gradient(to right, #${nameGradientStart}, #${nameGradientEnd}, #${nameGradientStart})`,
+      backgroundSize: "200% auto",
+      backgroundClip: "text",
+      WebkitBackgroundClip: "text",
+      color: "transparent",
+      WebkitTextFillColor: "transparent",
+      animation: "animated-name 3s linear infinite",
+    } : nameColor ? {
+      color: `#${nameColor}`,
+    } : {})
+  };
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -137,6 +162,15 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       height={height}
       viewBox={`0 0 ${width} ${height}`}
     >
+      <style>
+        {`
+          @keyframes animated-name {
+            to {
+              background-position: 200% center;
+            }
+          }
+        `}
+      </style>
       <foreignObject x="0" y="0" width="410" height={height}>
         <ForeignDiv
           xmlns="http://www.w3.org/1999/xhtml"
@@ -166,15 +200,14 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 paddingBottom: "5px",
                 borderBottom:
                   hideActivity === true ||
-                  (hideActivity === "whenNotUsed" &&
-                    !activity &&
-                    !data.listening_to_spotify)
+                    (hideActivity === "whenNotUsed" &&
+                      !activity &&
+                      !data.listening_to_spotify)
                     ? "none"
-                    : `solid 0.5px ${
-                        theme === "dark"
-                          ? "hsl(0, 0%, 100%, 10%)"
-                          : "hsl(0, 0%, 0%, 10%)"
-                      }`,
+                    : `solid 0.5px ${theme === "dark"
+                      ? "hsl(0, 0%, 100%, 10%)"
+                      : "hsl(0, 0%, 0%, 10%)"
+                    }`,
               }}
             >
               <div
@@ -201,7 +234,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 />
 
                 {hideDecoration ||
-                !data.discord_user.avatar_decoration_data ? null : (
+                  !data.discord_user.avatar_decoration_data ? null : (
                   <>
                     <img
                       src={`data:image/webp;base64,${avatarDecoration!}`}
@@ -249,13 +282,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                     height: "25px",
                   }}
                 >
-                  <h1
-                    style={{
-                      fontSize: "1.15rem",
-                      margin: "0 12px 0 0",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <h1 style={nameStyle}>
                     {showDisplayName && data.discord_user.global_name
                       ? data.discord_user.global_name
                       : data.discord_user.username}
@@ -273,8 +300,8 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   </h1>
 
                   {hideTag ||
-                  (!data.discord_user.primary_guild?.tag &&
-                    !data.discord_user.primary_guild?.badge) ? null : (
+                    (!data.discord_user.primary_guild?.tag &&
+                      !data.discord_user.primary_guild?.badge) ? null : (
                     <span
                       style={{
                         backgroundColor: clanBackgroundColor,
@@ -310,26 +337,79 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
                   {!!hideBadges
                     ? null
-                    : flags
-                        .map((v) => {
-                          const badgeImage = getBadgeImage(v);
-                          return badgeImage ? (
-                            <img
-                              key={v}
-                              alt={v}
-                              src={badgeImage}
-                              style={{
-                                width: "auto",
-                                height: "20px",
-                                position: "relative",
-                                top: "50%",
-                                transform: "translate(0%, -50%)",
-                                marginRight: "7px",
-                              }}
-                            />
-                          ) : null;
-                        })
-                        .filter(Boolean)}
+                    : (
+                      <>
+                        <style>{`.badge-wrapper .badge-tooltip{display:none;pointer-events:none}.badge-wrapper:hover .badge-tooltip{display:block;pointer-events:auto}`}</style>
+                        {flags
+                          .map((v) => {
+                            const badgeImage = getBadgeImage(v);
+                            const badgeInfo = getBadgeInfo(v);
+                            const tooltipImage = getBadgeTooltipImage(v);
+
+                            return badgeImage ? (
+                              <span
+                                key={v}
+                                className="badge-wrapper"
+                                style={{
+                                  position: "relative",
+                                  display: "inline-block",
+                                  marginRight: "7px",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
+                                }}
+                              >
+                                <img
+                                  alt={v}
+                                  src={badgeImage}
+                                  style={{
+                                    width: "auto",
+                                    height: "20px",
+                                    display: "block",
+                                  }}
+                                />
+
+                                <div
+                                  className="badge-tooltip"
+                                  style={{
+                                    position: "absolute",
+                                    bottom: "120%",
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    padding: "8px 12px",
+                                    backgroundColor:
+                                      theme === "dark"
+                                        ? "rgba(32, 34, 37, 0.95)"
+                                        : "#fff",
+                                    color: theme === "dark" ? "#fff" : "#000",
+                                    borderRadius: "4px",
+                                    fontSize: "12px",
+                                    whiteSpace: "nowrap",
+                                    boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                                    zIndex: 10,
+                                  }}
+                                >
+                                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                    {tooltipImage && (
+                                      <img
+                                        src={tooltipImage}
+                                        alt={v}
+                                        style={{ width: "20px", height: "20px", objectFit: "contain" }}
+                                      />
+                                    )}
+                                    <div style={{ display: "flex", flexDirection: "column" }}>
+                                      <div style={{ fontWeight: 600 }}>{badgeInfo.description || v}</div>
+                                      {badgeInfo.earnedBy ? (
+                                        <div style={{ fontSize: "11px", color: theme === "dark" ? "#b9bbbe" : "#666" }}>{badgeInfo.earnedBy}</div>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                </div>
+                              </span>
+                            ) : null;
+                          })
+                          .filter(Boolean)}
+                      </>
+                    )}
                 </div>
 
                 {showDisplayName ? (
@@ -372,16 +452,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                     ) : null}
 
                     {userStatus.state &&
-                    userStatus.emoji?.name &&
-                    !userStatus.emoji.id
+                      userStatus.emoji?.name &&
+                      !userStatus.emoji.id
                       ? `${userStatus.emoji.name} ${userStatus.state}`
                       : userStatus.state
-                      ? userStatus.state
-                      : !userStatus.state &&
-                        userStatus.emoji?.name &&
-                        !userStatus.emoji.id
-                      ? userStatus.emoji.name
-                      : null}
+                        ? userStatus.state
+                        : !userStatus.state &&
+                          userStatus.emoji?.name &&
+                          !userStatus.emoji.id
+                          ? userStatus.emoji.name
+                          : null}
                   </p>
                 ) : null}
               </div>
@@ -522,9 +602,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             </div>
           ) : null}
           {data.listening_to_spotify &&
-          !activity &&
-          !hideSpotify &&
-          data.activities[Object.keys(data.activities).length - 1].type ===
+            !activity &&
+            !hideSpotify &&
+            data.activities[Object.keys(data.activities).length - 1].type ===
             2 ? (
             <div
               style={{
@@ -603,8 +683,8 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             </div>
           ) : null}
           {!activity &&
-          (!data.listening_to_spotify || hideSpotify) &&
-          !hideActivity ? (
+            (!data.listening_to_spotify || hideSpotify) &&
+            !hideActivity ? (
             <div
               style={{
                 display: "flex",

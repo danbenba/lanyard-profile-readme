@@ -19,6 +19,10 @@ export type ProfileSettings = {
   idleMessage?: string;
   optimized?: boolean;
   customBadges?: string[];
+  nameColor?: string;
+  nameGradientStart?: string;
+  nameGradientEnd?: string;
+  nameFont?: string;
 };
 
 export type SearchParams = {
@@ -41,39 +45,43 @@ export type SearchParams = {
   borderRadius?: string;
   idleMessage?: string;
   customBadges?: string;
+  nameColor?: string;
+  nameGradientStart?: string;
+  nameGradientEnd?: string;
+  nameFont?: string;
 };
 
 export type IParameterInfo = Array<
   { deprecated?: boolean } & (
     | {
-        parameter: string;
-        type: "boolean";
-        title: string;
-        description?: string;
-        invertBoolean?: boolean; // set to 'true' to invert the boolean value, e.g. `animated` is FALSE when the 'Disable Animated Avatar" parameter is TRUE
-      }
+      parameter: string;
+      type: "boolean";
+      title: string;
+      description?: string;
+      invertBoolean?: boolean; // set to 'true' to invert the boolean value, e.g. `animated` is FALSE when the 'Disable Animated Avatar" parameter is TRUE
+    }
     | {
-        parameter: string;
-        type: "string";
-        title: string;
-        description?: string;
-        options?: {
-          placeholder?: string;
-          omit?: string[];
-        };
-      }
+      parameter: string;
+      type: "string";
+      title: string;
+      description?: string;
+      options?: {
+        placeholder?: string;
+        omit?: string[];
+      };
+    }
     | {
-        parameter: string;
-        type: "list";
-        title: string;
-        description?: string;
-        options: {
-          list: Array<{
-            name: string;
-            value: string;
-          }>;
-        };
-      }
+      parameter: string;
+      type: "list";
+      title: string;
+      description?: string;
+      options: {
+        list: Array<{
+          name: string;
+          value: string;
+        }>;
+      };
+    }
   )
 >;
 
@@ -212,3 +220,54 @@ export const PARAMETER_INFO: IParameterInfo = [
     deprecated: true,
   },
 ].sort((a, b) => b.type.localeCompare(a.type)) as IParameterInfo;
+
+// Add new parameters to the array before sorting or push them
+const NEW_PARAMETERS: IParameterInfo = [
+  {
+    parameter: "nameColor",
+    type: "string",
+    title: "Diplay Name Color",
+    description: "Hex color for your display name.",
+    options: {
+      placeholder: "FF0000",
+      omit: ["#"],
+    },
+  },
+  {
+    parameter: "nameGradientStart",
+    type: "string",
+    title: "Gradient Start Color",
+    description: "Start color for the animated name gradient.",
+    options: {
+      placeholder: "FF0000",
+      omit: ["#"],
+    },
+  },
+  {
+    parameter: "nameGradientEnd",
+    type: "string",
+    title: "Gradient End Color",
+    description: "End color for the animated name gradient.",
+    options: {
+      placeholder: "0000FF",
+      omit: ["#"],
+    },
+  },
+  {
+    parameter: "nameFont",
+    type: "list",
+    title: "Name Font",
+    description: "Font for your display name.",
+    options: {
+      list: [
+        { name: "Discord (gg sans)", value: "gg sans" },
+        { name: "Inter", value: "Inter" },
+        { name: "Roboto", value: "Roboto" },
+        { name: "Century Gothic", value: "Century Gothic" },
+        { name: "Arial", value: "Arial" },
+      ],
+    },
+  },
+];
+
+PARAMETER_INFO.push(...NEW_PARAMETERS);

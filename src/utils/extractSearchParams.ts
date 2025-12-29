@@ -27,8 +27,8 @@ export function extractSearchParams(
     params.hideActivity === "true"
       ? true
       : params.hideActivity === "whenNotUsed"
-      ? params.hideActivity
-      : false
+        ? params.hideActivity
+        : false
   ) as boolean | "whenNotUsed";
   const hideSpotify = parseBool(params.hideSpotify);
 
@@ -73,5 +73,9 @@ export function extractSearchParams(
     borderRadius: params.borderRadius,
     idleMessage: params.idleMessage,
     customBadges: customBadges.length > 0 ? customBadges : undefined,
+    nameColor: params.nameColor,
+    nameGradientStart: params.nameGradientStart,
+    nameGradientEnd: params.nameGradientEnd,
+    nameFont: params.nameFont,
   };
 }
