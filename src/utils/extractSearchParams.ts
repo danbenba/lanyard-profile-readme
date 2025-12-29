@@ -76,6 +76,6 @@ export function extractSearchParams(
     nameColor: params.nameColor,
     nameGradientStart: params.nameGradientStart,
     nameGradientEnd: params.nameGradientEnd,
-    nameFont: params.nameFont,
+    font: params.font,
   };
 }

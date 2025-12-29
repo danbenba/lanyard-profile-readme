@@ -22,7 +22,7 @@ export type ProfileSettings = {
   nameColor?: string;
   nameGradientStart?: string;
   nameGradientEnd?: string;
-  nameFont?: string;
+  font?: string;
 };
 
 export type SearchParams = {
@@ -48,7 +48,7 @@ export type SearchParams = {
   nameColor?: string;
   nameGradientStart?: string;
   nameGradientEnd?: string;
-  nameFont?: string;
+  font?: string;
 };
 
 export type IParameterInfo = Array<
@@ -254,10 +254,10 @@ const NEW_PARAMETERS: IParameterInfo = [
     },
   },
   {
-    parameter: "nameFont",
+    parameter: "font",
     type: "list",
-    title: "Name Font",
-    description: "Font for your display name.",
+    title: "Card Font",
+    description: "Font for the entire card.",
     options: {
       list: [
         { name: "Discord (gg sans)", value: "gg sans" },
@@ -265,6 +265,7 @@ const NEW_PARAMETERS: IParameterInfo = [
         { name: "Roboto", value: "Roboto" },
         { name: "Century Gothic", value: "Century Gothic" },
         { name: "Arial", value: "Arial" },
+        { name: "Poppins", value: "Poppins" },
       ],
     },
   },

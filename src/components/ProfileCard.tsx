@@ -44,7 +44,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     nameColor,
     nameGradientStart,
     nameGradientEnd,
-    nameFont
+    font,
   } = settings;
 
   const {
@@ -137,11 +137,32 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   const useGradient = nameGradientStart && nameGradientEnd;
 
+  // Font logic
+  const getFontStack = (fontName: string | undefined): string => {
+    if (!fontName) return `'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`;
+
+    switch (fontName) {
+      case "gg sans":
+        // Prioritize a very close match like 'Inter' or 'Roboto' if gg sans isn't available locally
+        return `'gg sans', 'Inter', 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif`;
+      case "Inter":
+        return `'Inter', sans-serif`;
+      case "Roboto":
+        return `'Roboto', sans-serif`;
+      case "Poppins":
+        return `'Poppins', sans-serif`;
+      default:
+        return `'${fontName}', sans-serif`;
+    }
+  };
+
+  const fontFamily = getFontStack(font);
+
   const nameStyle: React.CSSProperties = {
     fontSize: "1.15rem",
     margin: "0 12px 0 0",
     whiteSpace: "nowrap",
-    fontFamily: nameFont === "gg sans" ? "'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif" : nameFont,
+    // Remove fontFamily from specific name style as it inherits from container now
     ...(useGradient ? {
       backgroundImage: `linear-gradient(to right, #${nameGradientStart}, #${nameGradientEnd}, #${nameGradientStart})`,
       backgroundSize: "200% auto",
@@ -164,6 +185,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
     >
       <style>
         {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto:wght@300;400;500;700&amp;family=Poppins:wght@300;400;500;600;700&amp;display=swap');
           @keyframes animated-name {
             to {
               background-position: 200% center;
@@ -181,7 +203,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             inset: 0,
             backgroundColor: `#${backgroundColor}`,
             color: theme === "dark" ? "#fff" : "#000",
-            fontFamily: `'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`,
+            fontFamily: fontFamily,
             fontSize: "16px",
             display: "flex",
             flexDirection: "column",
